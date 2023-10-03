@@ -15,7 +15,7 @@ module.exports.createUser = (req, res, next) => {
     }))
     .catch((err) => {
       if (err.name === 'ValidationError' || (err.name === 'CastError')) {
-        next(new BadRequestError(`Переданы некорректные данные при создании пользователя -- ${err.name}`));
+        next(new BadRequestError(`Переданы некорректные данные -- ${err.name}`));
       } else {
         next(err);
       }
@@ -43,7 +43,7 @@ module.exports.getUserId = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new BadRequestError(`Переданы некорректные данные при создании пользователя -- ${err.name}`));
+        next(new BadRequestError(`Переданы некорректные данные  -- ${err.name}`));
       } else {
         next(err);
       }
@@ -63,7 +63,7 @@ module.exports.updateProfile = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequestError(`Переданы некорректные данные при создании пользователя -- ${err.name}`));
+        next(new BadRequestError(`Переданы некорректные данные  -- ${err.name}`));
       } else {
         next(err);
       }
@@ -83,7 +83,7 @@ module.exports.updateAvatar = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequestError(`Переданы некорректные данные при создании пользователя -- ${err.name}`));
+        next(new BadRequestError(`Переданы некорректные данные -- ${err.name}`));
       } else {
         next(err);
       }
