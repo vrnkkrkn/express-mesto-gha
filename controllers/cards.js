@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 const Card = require('../models/card');
 
 const {
@@ -35,14 +36,18 @@ module.exports.getCard = (req, res, next) => {
 module.exports.deleteCard = (req, res, next) => {
   Card
     .findById(req.params.cardId)
+    .orFail(() => new NotFoundError('Карточка не найдена'))
     .then((card) => {
-      if (!card) {
-        return next(new NotFoundError('Карточка не найдена'));
-      }
       if (!card.owner.equals(req.user._id)) {
-        return next(new ForbiddenError('Карточка создана другим пользователем'));
+        next(new ForbiddenError('Карточка создана другим пользователем'));
+      } else {
+        Card
+          .deleteOne(card)
+          .then(() => {
+            res.send({ message: 'Карточка удалена' });
+          })
+          .catch(next);
       }
-      return res.send({ message: 'Карточка удалена' });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -63,7 +68,6 @@ module.exports.likeCard = (req, res, next) => {
       if (err.name === 'CastError') {
         next(new BadRequestError('Переданы некорректные данные'));
       } else {
-        console.log('here');
         next(err);
       }
     });
