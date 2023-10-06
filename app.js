@@ -1,42 +1,59 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const { celebrate, Joi, errors } = require('celebrate');
+const { createUser, login } = require('./controllers/users');
+const auth = require('./middlewares/auth');
 
-const { PORT = 3000 } = process.env;
+const { PORT = 3000, DB_URL = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
+const { IntervalServerError, NotFoundError } = require('./errors/errors');
 
 const app = express();
 
 /** подключаемся к серверу mongo */
-mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
+mongoose.connect(DB_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use((req, res, next) => {
-  req.user = {
-    _id: '65169633d3f2a8d9cb06b656',
-  };
 
-  next();
-});
+app.post('/signup', celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string().regex(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/),
+    email: Joi.string().required().email(),
+    password: Joi.string().required(),
+  }),
+}), createUser);
+
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required(),
+  }),
+}), login);
+
+/** авторизация */
+app.use(auth);
 app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
-
-app.use('*', (req, res) => {
-  res.status(404).send({ message: 'Страница не найдена' });
+/** обработчики ошибок */
+app.use(errors());
+app.use('*', (req, res, next) => {
+  next(new NotFoundError('Страница не найдена'));
 });
-
 app.use((err, req, res, next) => {
-  // если у ошибки нет статуса, выставляем 500
-  const { statusCode = 500, message } = err;
+  /** если у ошибки нет статуса, выставляем 500 */
+  const { statusCode = IntervalServerError, message } = err;
 
   res
     .status(statusCode)
     .send({
-      // проверяем статус и выставляем сообщение в зависимости от него
-      message: statusCode === 500
+      /** проверяем статус и выставляем сообщение в зависимости от него */
+      message: statusCode === IntervalServerError
         ? 'На сервере произошла ошибка'
         : message,
     });
