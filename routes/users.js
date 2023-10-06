@@ -7,6 +7,8 @@ const {
 
 /** возвращает всех пользователей */
 router.get('/', getUser);
+/** возвращает информацию о текущем пользователе  */
+router.get('/me', getCurrentUser);
 
 /** возвращает пользователя по _id */
 router.get('/:userId', celebrate({
@@ -14,9 +16,6 @@ router.get('/:userId', celebrate({
     userId: Joi.string().length(24).hex().required(),
   }),
 }), getUserId);
-
-/** возвращает информацию о текущем пользователе  */
-router.get('/me', getCurrentUser);
 
 /** обновляет профиль */
 router.patch('/me', celebrate({
